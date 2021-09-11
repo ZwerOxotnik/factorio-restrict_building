@@ -1,0 +1,131 @@
+---@class PE : module
+local M = {}
+
+
+--#region Constatns
+local TEXT_COLOR = {r = 1, g = 0, b = 0, a = 0.5}
+--#endregion
+
+
+--#region Settings
+local restrict_building_radius = settings.global["restrict_building_radius"].value
+--#endregion
+
+
+--#region Utils
+
+local function find_near_enemy(created_entity)
+	local created_entity_force = created_entity.force
+	local near_entities = created_entity.surface.find_entities_filtered({
+		position = created_entity.position,
+		radius = restrict_building_radius,
+		type = "entity-ghost",
+		limit = 30,
+		invert = true
+	})
+
+	local get_cease_fire = created_entity_force.get_cease_fire
+	for _, entity in pairs(near_entities) do
+		local entity_force = entity.force
+		if (entity_force ~= created_entity_force
+			and not get_cease_fire(entity_force)
+			and entity_force.name ~= "neutral"
+		) then
+			return true
+		end
+	end
+	return false
+end
+
+--#endregion
+
+
+--#region Functions of events
+
+local function on_built_entity(event)
+	local created_entity = event.created_entity
+	if created_entity.force.name == "neutral" then return end
+	local player = game.get_player(event.player_index)
+	if not (player.controller_type == defines.controllers.character or player.controller_type == defines.controllers.god) then return end
+
+	if not find_near_enemy(created_entity) then return end
+	-- TODO: change
+	if event.player_index and event.item then
+		player.insert{name = event.item.name}
+		rendering.draw_text{
+			text = {"messages.warning_restricted_building"},
+			surface = created_entity.surface,
+			target = created_entity.position,
+			players = {player},
+			visible = true,
+			alignment = "center",
+			time_to_live = 60 * 3,
+			color = TEXT_COLOR
+		}
+	end
+	created_entity.destroy()
+end
+
+local function on_robot_built_entity(event)
+	local created_entity = event.created_entity
+	local force = created_entity.force
+	if force.name == "neutral" then return end
+
+	if not find_near_enemy(created_entity) then return end
+	-- TODO: change
+	rendering.draw_text{
+		text = {"messages.warning_restricted_building"},
+		surface = created_entity.surface,
+		target = created_entity.position,
+		forces = {force},
+		visible = true,
+		alignment = "center",
+		time_to_live = 60 * 3,
+		color = TEXT_COLOR
+	}
+	created_entity.destroy()
+end
+
+local function on_runtime_mod_setting_changed(event)
+	if event.setting_type ~= "runtime-global" then return end
+
+	if event.setting == "restrict_building_radius" then
+		restrict_building_radius = settings.global[event.setting].value
+	end
+end
+
+--#endregion
+
+
+--#region Pre-game stage
+
+local function set_filters()
+	local filters = {{filter = "type", type = "entity-ghost", invert = true}}
+	script.set_event_filter(defines.events.on_robot_built_entity, filters)
+	-- script.set_event_filter(defines.events.on_built_entity, filters)
+end
+
+local function add_remote_interface()
+	-- https://lua-api.factorio.com/latest/LuaRemote.html
+	remote.remove_interface("restrict_building") -- For safety
+	remote.add_interface("restrict_building", {})
+end
+
+M.on_init = set_filters
+M.on_load = set_filters
+M.add_remote_interface = add_remote_interface
+
+--#endregion
+
+
+M.events = {
+	[defines.events.on_runtime_mod_setting_changed] = on_runtime_mod_setting_changed,
+	[defines.events.on_built_entity] = function(event)
+		pcall(on_built_entity, event)
+	end,
+	[defines.events.on_robot_built_entity] = function(event)
+		pcall(on_robot_built_entity, event)
+	end
+}
+
+return M

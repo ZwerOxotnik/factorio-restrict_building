@@ -1,0 +1,11 @@
+{
+	"name": "restrict_building",
+	"version": "1.0.0",
+	"factorio_version": "1.1",
+	"title": "Private electricity",
+	"author": "ZwerOxotnik",
+	"contact": "zweroxotnik@gmail.com, Discord:ZwerOxotnik#7117",
+	"homepage": "",
+	"description": "Doesn't allow to build near an enemy",
+	"dependencies": []
+}
