@@ -84,6 +84,8 @@ end
 
 M.on_init = set_filters
 M.on_load = set_filters
+M.on_mod_enabled = set_filters
+M.on_mod_disabled = set_filters
 M.add_remote_interface = add_remote_interface
 
 --#endregion
