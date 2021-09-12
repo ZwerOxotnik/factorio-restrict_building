@@ -99,4 +99,8 @@ M.events = {
 	end
 }
 
+M.events_when_off = {
+	[defines.events.on_runtime_mod_setting_changed] = on_runtime_mod_setting_changed
+}
+
 return M
