@@ -19,27 +19,16 @@ local restrict_building_radius = settings.global["restrict_building_radius"].val
 --#region Utils
 
 local function find_near_enemy(created_entity)
-	local created_entity_force = created_entity.force
-	local near_entities = created_entity.surface.find_entities_filtered({
+	local near_entity = created_entity.surface.find_nearest_enemy_entity_with_owner({
 		position = created_entity.position,
-		radius = restrict_building_radius,
-		type = "entity-ghost",
-		limit = 30,
-		invert = true
+		max_distance = restrict_building_radius,
+		force = created_entity.force
 	})
-
-	local get_cease_fire = created_entity_force.get_cease_fire
-	for _, entity in pairs(near_entities) do
-		local entity_force = entity.force
-		if (
-			entity_force ~= created_entity_force
-			and not get_cease_fire(entity_force)
-			and entity_force.name ~= "neutral"
-		) then
-			return true
-		end
+	if near_entity then
+		return near_entity
+	else
+		return false
 	end
-	return false
 end
 
 --#endregion
