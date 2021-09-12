@@ -1,4 +1,13 @@
 ﻿---------------------------------------------------------------------------------------------------
+Version: 1.1.0
+Date: 2021-09-12
+  Changes:
+    - Deleted text when drones trying to build stuff near an enemy
+    - Changed style
+  Bugfixes:
+    - Properly deleting entities
+    - Fixed building of ghost entities
+---------------------------------------------------------------------------------------------------
 Version: 1.0.0
 Date: 2021-09-11
   Changes:

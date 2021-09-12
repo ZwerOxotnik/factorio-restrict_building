@@ -3,7 +3,11 @@ local M = {}
 
 
 --#region Constatns
-local TEXT_COLOR = {r = 1, g = 0, b = 0, a = 0.5}
+local TEXT = {
+	text = {"messages.warning_restricted_building"},
+	create_at_cursor = true,
+	time_to_live = 180
+}
 --#endregion
 
 
@@ -27,7 +31,8 @@ local function find_near_enemy(created_entity)
 	local get_cease_fire = created_entity_force.get_cease_fire
 	for _, entity in pairs(near_entities) do
 		local entity_force = entity.force
-		if (entity_force ~= created_entity_force
+		if (
+			entity_force ~= created_entity_force
 			and not get_cease_fire(entity_force)
 			and entity_force.name ~= "neutral"
 		) then
@@ -45,45 +50,23 @@ end
 local function on_built_entity(event)
 	local created_entity = event.created_entity
 	if created_entity.force.name == "neutral" then return end
-	local player = game.get_player(event.player_index)
+	local player_index = event.player_index
+	local player = game.get_player(player_index)
 	if not (player.controller_type == defines.controllers.character or player.controller_type == defines.controllers.god) then return end
 
 	if not find_near_enemy(created_entity) then return end
-	-- TODO: change
-	if event.player_index and event.item then
-		player.insert{name = event.item.name}
-		rendering.draw_text{
-			text = {"messages.warning_restricted_building"},
-			surface = created_entity.surface,
-			target = created_entity.position,
-			players = {player},
-			visible = true,
-			alignment = "center",
-			time_to_live = 60 * 3,
-			color = TEXT_COLOR
-		}
-	end
-	created_entity.destroy()
+	player.mine_entity(created_entity, true)
+	player.create_local_flying_text(TEXT)
 end
 
+local DESTROY_TYPE = {raise_destroy = true}
 local function on_robot_built_entity(event)
 	local created_entity = event.created_entity
 	local force = created_entity.force
 	if force.name == "neutral" then return end
 
 	if not find_near_enemy(created_entity) then return end
-	-- TODO: change
-	rendering.draw_text{
-		text = {"messages.warning_restricted_building"},
-		surface = created_entity.surface,
-		target = created_entity.position,
-		forces = {force},
-		visible = true,
-		alignment = "center",
-		time_to_live = 60 * 3,
-		color = TEXT_COLOR
-	}
-	created_entity.destroy()
+	created_entity.destroy(DESTROY_TYPE)
 end
 
 local function on_runtime_mod_setting_changed(event)
@@ -101,8 +84,7 @@ end
 
 local function set_filters()
 	local filters = {{filter = "type", type = "entity-ghost", invert = true}}
-	script.set_event_filter(defines.events.on_robot_built_entity, filters)
-	-- script.set_event_filter(defines.events.on_built_entity, filters)
+	script.set_event_filter(defines.events.on_built_entity, filters)
 end
 
 local function add_remote_interface()
