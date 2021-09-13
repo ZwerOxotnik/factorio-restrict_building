@@ -1,1 +1,3 @@
-return true
+return {
+	default_value = true
+}

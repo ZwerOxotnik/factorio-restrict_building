@@ -7,7 +7,7 @@
   <img
     width="144"
     src="thumbnail.png"
-    alt="Easy API"
+    alt="thumbnail"
   />
 </p> -->
 
