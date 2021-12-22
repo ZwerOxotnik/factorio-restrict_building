@@ -1,6 +1,6 @@
 {
 	"name": "restrict_building",
-	"version": "1.1.4",
+	"version": "1.1.5",
 	"factorio_version": "1.1",
 	"title": "Restrict building",
 	"author": "ZwerOxotnik",
@@ -8,6 +8,7 @@
 	"homepage": "",
 	"description": "See locale/*",
 	"dependencies": [
+		"? zk-lib >= 0.10.0",
 		"? switchable_mods"
 	]
 }

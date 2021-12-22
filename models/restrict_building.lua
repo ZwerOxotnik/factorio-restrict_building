@@ -59,8 +59,7 @@ local function on_robot_built_entity(event)
 end
 
 local function on_runtime_mod_setting_changed(event)
-	if event.setting_type ~= "runtime-global" then return end
-
+	-- if event.setting_type ~= "runtime-global" then return end
 	if event.setting == "restrict_building_radius" then
 		restrict_building_radius = settings.global[event.setting].value
 	end
