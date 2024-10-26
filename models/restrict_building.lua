@@ -8,60 +8,66 @@ local TEXT = {
 	create_at_cursor = true,
 	time_to_live = 180
 }
---#endregion
-
-
---#region Settings
-local restrict_building_radius = settings.global["restrict_building_radius"].value
+local DESTROY_TYPE = {raise_destroy = true}
+local CHARACTER_TYPE = defines.controllers.character
+local GOD_TYPE       = defines.controllers.god
 --#endregion
 
 
 --#region Utils
-
-local function find_near_enemy(created_entity)
-	local near_entity = created_entity.surface.find_nearest_enemy_entity_with_owner({
-		position = created_entity.position,
-		max_distance = restrict_building_radius,
-		force = created_entity.force
-	})
-	if near_entity then
-		return near_entity
-	else
-		return false
-	end
-end
 
 --#endregion
 
 
 --#region Functions of events
 
+local __find_param = {
+	max_distance = settings.global["restrict_building_radius"].value,
+	position = nil,
+	force = nil
+}
 local function on_built_entity(event)
-	local created_entity = event.created_entity
-	if created_entity.force.name == "neutral" then return end
-	local player_index = event.player_index
-	local player = game.get_player(player_index)
-	if not (player.controller_type == defines.controllers.character or player.controller_type == defines.controllers.god) then return end
+	local entity = event.entity
+	-- if not entity.valid then return end
 
-	if not find_near_enemy(created_entity) then return end
-	player.mine_entity(created_entity, true)
+	local force = entity.force
+	if force.index == 3 then return end -- neutral
+	local player = game.get_player(event.player_index)
+	local controller_type = player.controller_type
+	if not (controller_type == CHARACTER_TYPE or controller_type == GOD_TYPE) then return end
+
+	__find_param.position = entity.position
+	__find_param.force    = force
+	local near_entity = entity.surface.find_nearest_enemy_entity_with_owner(__find_param)
+	if not near_entity then
+		return
+	end
+
+	player.mine_entity(entity, true)
 	player.create_local_flying_text(TEXT)
 end
 
-local DESTROY_TYPE = {raise_destroy = true}
 local function on_robot_built_entity(event)
-	local created_entity = event.created_entity
-	local force = created_entity.force
-	if force.name == "neutral" then return end
+	local entity = event.entity
+	if not entity.valid then return end
 
-	if not find_near_enemy(created_entity) then return end
-	created_entity.destroy(DESTROY_TYPE)
+	local force = entity.force
+	if force.index == 3 then return end -- neutral
+
+	__find_param.position = entity.position
+	__find_param.force    = force
+	local near_entity = entity.surface.find_nearest_enemy_entity_with_owner(__find_param)
+	if not near_entity then
+		return
+	end
+
+	entity.destroy(DESTROY_TYPE)
 end
 
 local function on_runtime_mod_setting_changed(event)
 	-- if event.setting_type ~= "runtime-global" then return end
 	if event.setting == "restrict_building_radius" then
-		restrict_building_radius = settings.global[event.setting].value
+		__find_param.max_distance = settings.global[event.setting].value
 	end
 end
 
@@ -83,7 +89,7 @@ end
 
 M.on_init = set_filters
 M.on_load = set_filters
-M.on_mod_enabled = set_filters
+M.on_mod_enabled  = set_filters
 M.on_mod_disabled = set_filters
 M.add_remote_interface = add_remote_interface
 
@@ -95,9 +101,7 @@ M.events = {
 	[defines.events.on_built_entity] = function(event)
 		pcall(on_built_entity, event)
 	end,
-	[defines.events.on_robot_built_entity] = function(event)
-		pcall(on_robot_built_entity, event)
-	end
+	[defines.events.on_robot_built_entity] = on_robot_built_entity,
 }
 
 M.events_when_off = {

@@ -79,7 +79,7 @@ Alternatively, join the [Discord group][Discord] and send a message there.
 License
 -------
 
-Copyright (c) 2018-2021 ZwerOxotnik <zweroxotnik@gmail.com>
+Copyright (c) 2018-2021, 2024 ZwerOxotnik <zweroxotnik@gmail.com>
 
 Licensed under the MIT licence.
 
